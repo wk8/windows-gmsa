@@ -5,7 +5,9 @@
 
 set -e
 
-KUBECTL=~/.kubeadm-dind-cluster/kubectl
+export KUBECTL="$TRAVIS_BUILD_DIR/admission-webhook/dev/kubectl"
+export KUBECONFIG="$TRAVIS_BUILD_DIR/admission-webhook/dev/kubeconfig"
+export CLUSTER_NAME=windows-gmsa-travis
 
 main() {
     case "$T" in
@@ -52,7 +54,7 @@ run_integration_tests() {
         SERVICE_IP="$($KUBECTL -n $NAMESPACE get service $DEPLOYMENT_NAME -o=jsonpath='{.spec.clusterIP}')"
 
         local INFO_OUTPUT
-        INFO_OUTPUT="$(docker exec kube-master curl -sk https://$SERVICE_IP/info)"
+        INFO_OUTPUT="$(docker exec "$CLUSTER_NAME-control-plane" curl -sk https://$SERVICE_IP/info)"
 
         if [[ "$INFO_OUTPUT" == *"$BOGUS_VERSION"* ]]; then
             echo -e "Output from /info does contain '$BOGUS_VERSION':\n$INFO_OUTPUT"
